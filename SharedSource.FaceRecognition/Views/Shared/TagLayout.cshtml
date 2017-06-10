@@ -1,0 +1,23 @@
+﻿@using Sitecore.Extensions
+@using Sitecore.Mvc
+@using Sitecore.Mvc.Extensions
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Image Tagging Test</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="@Url.Content("~/Scripts/initializeTaggedImage.js")"></script>
+</head>
+<body>
+    <div>
+        @Html.Sitecore().Field("Image", Sitecore.Context.Item, new { showfacetags  = true})
+    </div>
+</body>
+</html>
