@@ -1,0 +1,43 @@
+﻿.images-section {
+    margin: 20px;
+}
+
+.face-tag {
+    position: absolute;   
+}
+
+.face-tag .identified {
+    border-color: green !important;
+}
+
+.tag-item-selector {
+   display: block;
+    width: 250px;
+    height: 100%;
+    position: fixed;
+    top: 0px;
+    right: -265px;
+    background: white;
+    box-shadow: gray 1px 1px 14px 1px;
+    transition: all 1s;
+}
+
+.tag-item-selector.opened {
+    right: 0px;
+}
+
+.tag-item-selector .tag-person a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    background: black;
+    margin: 10px;
+    text-align: center;
+    padding: 10px;
+}
+
+.tag-item-selector .tag-person a:hover {
+    background: darkblue;
+}
+
+

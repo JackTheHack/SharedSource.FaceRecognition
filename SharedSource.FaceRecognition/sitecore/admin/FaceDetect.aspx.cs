@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
-using Sitecore.Data;
-using System.Web.UI;
-using System.Web.UI.WebControls;
-using Newtonsoft.Json;
-using SharedSource.FaceRecognition;
-using Sitecore.Data.Items;
-using Sitecore.SecurityModel;
+using System.Threading.Tasks;
+using SharedSource.FaceRecognition.Services;
+using Sitecore.Diagnostics;
 
-namespace SharedSource.EngagementPlanViewer.sitecore.admin
+namespace SharedSource.FaceRecognition.sitecore.admin
 {
     public partial class FaceDetect : System.Web.UI.Page
     {
@@ -21,24 +14,12 @@ namespace SharedSource.EngagementPlanViewer.sitecore.admin
 
         protected void btnDetectFaces_OnClick(object sender, EventArgs e)
         {
-            var folder =
-                Database.GetDatabase("master").GetItem(Sitecore.Data.ID.Parse("{61BBE5BB-9AE9-426F-A717-1B4ADF1C5798}"));
-
-            var faceRecognition = new FaceRecognitionLogic();
-
-            foreach (Item img in folder.Children)
+            var faceService = new FaceService();
+            Task.Run(() =>
             {
-                var mediaItem = new MediaItem(img);
-                var faces = faceRecognition.DetectFaces(mediaItem);
-                img.Editing.BeginEdit();
-                using (new EditContext(mediaItem, SecurityCheck.Disable))
-                {
-                    var faceMetadata = img.Fields["FaceMetadata"];
-                    if (faceMetadata != null)
-                        faceMetadata.Value = JsonConvert.SerializeObject(faces);
-                    img.Editing.EndEdit(true);
-                }
-            }
+                Log.Info("Training face recognition before indexing...", this);
+                faceService.Train();
+            }).Wait(TimeSpan.FromSeconds(5));
         }
     }
 }

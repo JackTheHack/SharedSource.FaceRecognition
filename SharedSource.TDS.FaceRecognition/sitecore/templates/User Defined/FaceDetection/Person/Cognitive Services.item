@@ -1,33 +1,26 @@
 ----item----
 version: 1
-id: {157A7C04-DC65-4B1B-BD43-A4071C2B8604}
+id: {283BE9A5-4392-4D7A-9EDD-6AC64C3551F7}
 database: master
-path: /sitecore/templates/User Defined/FaceDetection/PersonFolder
-parent: {47F8CDA8-36EA-485B-8027-DC94830D9369}
-name: PersonFolder
+path: /sitecore/templates/User Defined/FaceDetection/Person/Cognitive Services
+parent: {1EB19995-B7D6-4AAC-ACF7-6411264DCE24}
+name: Cognitive Services
 master: {00000000-0000-0000-0000-000000000000}
-template: {AB86861A-6030-46C5-B394-E8F99E8B87DB}
-templatekey: Template
-created: 20170603T042338:636320606189600000
+template: {E269FBB5-3750-427A-9149-7AA950B49301}
+templatekey: Template section
+created: 20170613T071712:636329350329700000
 
 ----field----
-field: {12C33F3F-86C5-43A5-AEB4-5598CEC45116}
-name: __Base template
-key: __base template
-content-length: 38
+field: {BA3F86A2-4A1C-4D78-B63D-91C2779C1B5E}
+name: __Sortorder
+key: __sortorder
+content-length: 3
 
-{1930BBEB-7805-471A-A3BE-4858AC7CF696}
-----field----
-field: {F7D48A55-2158-4F02-9356-756654404F73}
-name: __Standard values
-key: __standard values
-content-length: 38
-
-{81CA7570-BF91-43DF-AF10-E583E95D6DBB}
+200
 ----version----
 language: en
 version: 1
-revision: 0f35701b-f3cc-4b70-9420-9e838937750c
+revision: 386c65c3-a45f-4952-80d2-6fddc739614d
 
 ----field----
 field: {25BED78C-4957-4165-998A-CA1B52F67497}
@@ -35,7 +28,7 @@ name: __Created
 key: __created
 content-length: 16
 
-20170603T042338Z
+20170613T071713Z
 ----field----
 field: {5DD74568-4D4B-44C1-B513-0AF5F4CDA34F}
 name: __Created by
@@ -49,14 +42,14 @@ name: __Revision
 key: __revision
 content-length: 36
 
-0f35701b-f3cc-4b70-9420-9e838937750c
+386c65c3-a45f-4952-80d2-6fddc739614d
 ----field----
 field: {D9CF14B1-FA16-4BA6-9288-E8A174D4D522}
 name: __Updated
 key: __updated
 content-length: 16
 
-20170603T042342Z
+20170613T071713Z
 ----field----
 field: {BADD9CF9-53E0-4D0C-BCC0-2D784C282F6A}
 name: __Updated by

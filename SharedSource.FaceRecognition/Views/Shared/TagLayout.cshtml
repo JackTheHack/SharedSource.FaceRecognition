@@ -1,6 +1,10 @@
-﻿@using Sitecore.Extensions
+﻿@using System.Web.Mvc.Html
+@using SharedSource.FaceRecognition.Helpers
+@using SharedSource.FaceRecognition.Services
+@using Sitecore.Extensions
 @using Sitecore.Mvc
 @using Sitecore.Mvc.Extensions
+@using Sitecore.Resources.Media
 
 @{
     Layout = null;
@@ -8,16 +12,45 @@
 
 <!DOCTYPE html>
 
+@{
+    var faceService = new FaceService();
+    var images = faceService.GetImages();
+}
+
 <html>
 <head>
     <meta name="viewport" content="width=device-width" />
     <title>Image Tagging Test</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <script src="@Url.Content("~/Scripts/initializeTaggedImage.js")"></script>
+    <script src="@Url.Content("~/Scripts/notiny.min.js")"></script>
+    <script src="@Url.Content("~/Scripts/jquery.nanogallery2.min.js")"></script>
+    <script src="https://rawgit.com/enyo/dropzone/master/dist/dropzone.js"></script>
+    <link rel="stylesheet" href="/Styles/facerecognition.css"/>
+    <link rel="stylesheet" href="/Styles/notiny.min.css"/>
+    <link rel="stylesheet" href="/Styles/nanogallery/nanogallery2.min.css"/>
+    <link rel="stylesheet" href="https://rawgit.com/enyo/dropzone/master/dist/dropzone.css">
 </head>
 <body>
-    <div>
-        @Html.Sitecore().Field("Image", Sitecore.Context.Item, new { showfacetags  = true})
-    </div>
+
+
+<div class="upload-section">
+    <!-- Change /upload-target to your upload address -->
+    <form action="@Url.Action("UploadImage", "Face")" class="dropzone">
+
+    </form>
+</div>
+
+<div class="images-section" id="nanogallery2">
+@foreach (var image in images)
+{
+    @*<a href="@MediaManager.GetMediaUrl(image)" data-ngThumb="@MediaManager.GetMediaUrl(image, new MediaUrlOptions(150, 0, true))" data-facetags="@ItemHelper.GetImageChromeData()"></a>*@
+
+    <img src="@MediaManager.GetMediaUrl(image)"
+         data-facetags="@Html.Raw(ItemHelper.GetImageChromeData(image))" 
+         showfacetags="True">
+}
+</div>
+@Html.Action("IdentifyTag", "Face")
 </body>
 </html>

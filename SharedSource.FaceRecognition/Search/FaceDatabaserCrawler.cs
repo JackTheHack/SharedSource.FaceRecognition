@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Linq;
+using System.Threading.Tasks;
+using SharedSource.FaceRecognition.Constants;
+using SharedSource.FaceRecognition.Services;
 using Sitecore.ContentSearch;
 using Sitecore.ContentSearch.Diagnostics;
 using Sitecore.Data;
@@ -53,7 +56,12 @@ namespace SharedSource.FaceRecognition.Search
 
                 if (sitecoreIndexableItem == null ||
                     sitecoreIndexableItem.Item.Axes.GetAncestors()
-                        .All(i => i.TemplateID != ID.Parse("{92FB62D4-A2CB-4B57-AE48-22D0189439C5}")))
+                        .All(i => i.TemplateID != GlobalConstants.FaceMediaFolderTemplateId))
+                {
+                    return true;
+                }
+
+                if (!sitecoreIndexableItem.Item.Versions.IsLatestVersion())
                 {
                     return true;
                 }

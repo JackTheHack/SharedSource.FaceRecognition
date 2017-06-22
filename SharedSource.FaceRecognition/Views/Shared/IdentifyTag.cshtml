@@ -1,0 +1,20 @@
+﻿@model List<SharedSource.FaceRecognition.Models.Person>
+@using Sitecore.Extensions
+@using Sitecore.Mvc
+@using Sitecore.Mvc.Extensions
+
+@{Layout = null;}
+
+<div class="tag-item-selector">
+    <input type="hidden" name="selectedTag" />
+
+    @if (Model != null)
+    {
+        foreach (var person in Model)
+         {
+             <div class="tag-person" >
+                 <a href="#" data-value="@person.ID">@person.Name @person.Surname</a>
+             </div>
+         }
+    }
+</div>

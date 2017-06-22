@@ -7,7 +7,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SharedSource.EngagementPlanViewer.sitecore.admin {
+namespace SharedSource.FaceRecognition.sitecore.admin {
     
     
     public partial class FaceDetect {

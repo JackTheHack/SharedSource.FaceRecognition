@@ -65,6 +65,21 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <SitecoreItem Include="sitecore\layout.item">
+      <ChildItemSynchronization>NoChildSynchronization</ChildItemSynchronization>
+      <ItemDeployment>AlwaysUpdate</ItemDeployment>
+    </SitecoreItem>
+    <SitecoreItem Include="sitecore\layout\Renderings.item">
+      <ItemDeployment>AlwaysUpdate</ItemDeployment>
+      <ChildItemSynchronization>NoChildSynchronization</ChildItemSynchronization>
+    </SitecoreItem>
+    <SitecoreItem Include="sitecore\layout\Renderings\FaceRecognition.item">
+      <ItemDeployment>AlwaysUpdate</ItemDeployment>
+      <ChildItemSynchronization>NoChildSynchronization</ChildItemSynchronization>
+    </SitecoreItem>
+    <SitecoreItem Include="sitecore\layout\Renderings\FaceRecognition\IdentifyTag.item">
+      <ItemDeployment>AlwaysUpdate</ItemDeployment>
+    </SitecoreItem>
     <SitecoreItem Include="sitecore\system.item">
       <ChildItemSynchronization>NoChildSynchronization</ChildItemSynchronization>
       <ItemDeployment>AlwaysUpdate</ItemDeployment>
@@ -155,11 +170,15 @@
       <ChildItemSynchronization>KeepAllChildrenSynchronized</ChildItemSynchronization>
       <ItemDeployment>AlwaysUpdate</ItemDeployment>
     </SitecoreItem>
-    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\Person\Content.item">
+    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\Person\Cognitive Services.item">
       <ChildItemSynchronization>KeepAllChildrenSynchronized</ChildItemSynchronization>
       <ItemDeployment>AlwaysUpdate</ItemDeployment>
     </SitecoreItem>
-    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\Person\Content\Id.item">
+    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\Person\Cognitive Services\Id.item">
+      <ChildItemSynchronization>KeepAllChildrenSynchronized</ChildItemSynchronization>
+      <ItemDeployment>AlwaysUpdate</ItemDeployment>
+    </SitecoreItem>
+    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\Person\Content.item">
       <ChildItemSynchronization>KeepAllChildrenSynchronized</ChildItemSynchronization>
       <ItemDeployment>AlwaysUpdate</ItemDeployment>
     </SitecoreItem>
@@ -171,11 +190,11 @@
       <ChildItemSynchronization>KeepAllChildrenSynchronized</ChildItemSynchronization>
       <ItemDeployment>AlwaysUpdate</ItemDeployment>
     </SitecoreItem>
-    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\PersonFolder.item">
+    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\PersonGroup.item">
       <ChildItemSynchronization>KeepAllChildrenSynchronized</ChildItemSynchronization>
       <ItemDeployment>AlwaysUpdate</ItemDeployment>
     </SitecoreItem>
-    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\PersonFolder\__Standard Values.item">
+    <SitecoreItem Include="sitecore\templates\User Defined\FaceDetection\PersonGroup\__Standard Values.item">
       <ChildItemSynchronization>KeepAllChildrenSynchronized</ChildItemSynchronization>
       <ItemDeployment>AlwaysUpdate</ItemDeployment>
     </SitecoreItem>
@@ -184,9 +203,12 @@
     <ExcludedAssemblies Include="Emgu.CV.UI.dll" />
     <ExcludedAssemblies Include="Emgu.CV.UI.GL.dll" />
     <ExcludedAssemblies Include="Emgu.CV.World.dll" />
+    <ExcludedAssemblies Include="Imageresizer.dll" />
     <ExcludedAssemblies Include="Microsoft.AspNet.SignalR.%2a.dll" />
     <ExcludedAssemblies Include="Microsoft.Owin.%2a.dll" />
     <ExcludedAssemblies Include="Microsoft.Owin.dll" />
+    <ExcludedAssemblies Include="Microsoft.ProjectOxford.Face.dll" />
+    <ExcludedAssemblies Include="Newtonsoft.Json.dll" />
     <ExcludedAssemblies Include="Owin.dll" />
     <ExcludedAssemblies Include="SharedSource.FaceRecognition.dll" />
   </ItemGroup>

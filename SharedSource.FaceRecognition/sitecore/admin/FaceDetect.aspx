@@ -1,4 +1,4 @@
-﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="FaceDetect.aspx.cs" Inherits="SharedSource.EngagementPlanViewer.sitecore.admin.FaceDetect" %>
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="FaceDetect.aspx.cs" Inherits="SharedSource.FaceRecognition.sitecore.admin.FaceDetect" %>
 
 <!DOCTYPE html>
 

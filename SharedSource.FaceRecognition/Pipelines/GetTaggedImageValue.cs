@@ -1,8 +1,4 @@
-﻿using System.Linq;
-using System.Web;
-using Sitecore.ContentSearch;
-using Sitecore.ContentSearch.SearchTypes;
-using Sitecore.Data.Fields;
+﻿using SharedSource.FaceRecognition.Helpers;
 using Sitecore.Pipelines.RenderField;
 using Sitecore.Xml.Xsl;
 
@@ -22,27 +18,16 @@ namespace SharedSource.FaceRecognition.Pipelines
         {
             if (Parameters.ContainsKey("showfacetags") && Parameters["showfacetags"] == "True")
             {
-                var indexName = Sitecore.Context.Database.Name == "master" ? "face_master_index" : "face_web_index";
+                string chromeData = ItemHelper.GetImageFieldChromeData(Item, FieldName);
 
-                var index = ContentSearchManager.GetIndex(indexName);
-
-                using (var context = index.CreateSearchContext())
+                if (Parameters.ContainsKey("data-facetags"))
                 {
-                    var imageField = (ImageField) Item.Fields[FieldName];
+                    Parameters.Remove("data-facetags");
+                }
 
-                    if (imageField != null && imageField.MediaItem != null)
-                    {
-
-                        var searchQuery = context.GetQueryable<FaceSearchResultItem>()
-                            .Where(x => x.ItemId == imageField.MediaID);
-
-                        var resultItem = searchQuery.FirstOrDefault();
-
-                        if (!string.IsNullOrEmpty(resultItem?.Faces))
-                        {
-                            Parameters.Add("data-facetags", HttpUtility.HtmlEncode(resultItem.Faces));
-                        }
-                    }
+                if (!string.IsNullOrEmpty(chromeData))
+                {
+                    Parameters.Add("data-facetags", chromeData);
                 }
             }
 
@@ -50,12 +35,5 @@ namespace SharedSource.FaceRecognition.Pipelines
         }
     }
 
-    public class FaceSearchResultItem : SearchResultItem
-    {
-        [IndexField("faces")]
-        public string Faces { get; set; }
-        [IndexField("persons")]
-        public string[] Persons { get; set; }
-
-    }
+    
 }
