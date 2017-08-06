@@ -14,9 +14,15 @@ namespace SharedSource.FaceRecognition.Services
 {
     public class AzureFaceDetection : IFaceDetection
     {
+        private readonly FaceService _faceService;
+
+        public AzureFaceDetection()
+        {
+            _faceService = new FaceService();
+        }
+
         public List<FaceMetadata> DetectFaces(Stream stream)
         {
-
             if (stream != null)
             {
                 return Task.Run(() => DetectFacesAsync(stream)).Result;
@@ -28,7 +34,7 @@ namespace SharedSource.FaceRecognition.Services
 
         public async Task<List<FaceMetadata>> DetectFacesAsync(Stream stream)
         {
-            var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"), Settings.GetSetting("Cognitive.Url"));
+            var faceServiceClient = _faceService.CreateAzureClient();
 
             stream.Seek(0, SeekOrigin.Begin);
 

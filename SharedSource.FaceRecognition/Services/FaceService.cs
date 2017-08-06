@@ -29,7 +29,7 @@ namespace SharedSource.FaceRecognition.Services
 {
     public class FaceService
     {
-        public StringBuilder StringLog { get; set; }
+        public StringBuilder StringLog { get; private set; }
 
         private readonly Item _personsRoot;
 
@@ -41,24 +41,20 @@ namespace SharedSource.FaceRecognition.Services
 
             if (!string.IsNullOrEmpty(personsRootId))
             {
-                _personsRoot = Sitecore.Data.Database.GetDatabase("web").GetItem(ID.Parse(personsRootId));
+                _personsRoot = Database.GetDatabase("web").GetItem(ID.Parse(personsRootId));
             }
         }
 
-        public class TrainResult
+        public FaceServiceClient CreateAzureClient()
         {
-            public string Status { get; set; }
-            public DateTime LastAction { get; set; }
-            public string Message { get; set; }
-            public bool IsTrained { get; set; }
+            return new FaceServiceClient(
+                Settings.GetSetting("Cognitive.Key1"),
+                Settings.GetSetting("Cognitive.Url"));
         }
 
         public async Task<TrainResult> GetTrainingStatus()
         {
-            using (
-                var faceServiceClient = new FaceServiceClient(
-                    Settings.GetSetting("Cognitive.Key1"),
-                    Settings.GetSetting("Cognitive.Url")))
+            using (var faceServiceClient = CreateAzureClient())
             {
                 var personRoot = GetPersonGroup();
 
@@ -80,11 +76,13 @@ namespace SharedSource.FaceRecognition.Services
 
                 if (trainingStatus != null)
                 {
-                    var result = new TrainResult();
-                    result.Status = trainingStatus.Status.ToString();
-                    result.Message = trainingStatus.Message;
-                    result.LastAction = trainingStatus.LastActionDateTime;
-                    result.IsTrained = true;
+                    var result = new TrainResult
+                    {
+                        Status = trainingStatus.Status.ToString(),
+                        Message = trainingStatus.Message,
+                        LastAction = trainingStatus.LastActionDateTime,
+                        IsTrained = true
+                    };
 
                     Log.Info(
                         $"Training status - {trainingStatus.Message} {trainingStatus.Status} {trainingStatus.LastActionDateTime} {trainingStatus.CreatedDateTime}",
@@ -105,10 +103,7 @@ namespace SharedSource.FaceRecognition.Services
 
                 var personRoot = GetPersonGroup();
 
-                using (
-                    var faceServiceClient = new FaceServiceClient(
-                        Settings.GetSetting("Cognitive.Key1"),
-                        Settings.GetSetting("Cognitive.Url")))
+                using (var faceServiceClient = CreateAzureClient())
                 {
                     bool isTrained = false;
 
@@ -202,21 +197,21 @@ namespace SharedSource.FaceRecognition.Services
             };
         }
 
-        public List<Person> SearchPersons(string searchString)
-        {
-            var indexName = Sitecore.Context.Database.Name == "master" ? "sitecore_master_index" : "sitecore_web_index";
+        //public List<Person> SearchPersons(string searchString)
+        //{
+        //    var indexName = Sitecore.Context.Database.Name == "master" ? "sitecore_master_index" : "sitecore_web_index";
 
-            var index = ContentSearchManager.GetIndex(indexName);
+        //    var index = ContentSearchManager.GetIndex(indexName);
 
-            using (var context = index.CreateSearchContext())
-            {
+        //    using (var context = index.CreateSearchContext())
+        //    {
 
-                    var searchQuery = context.GetQueryable<PersonResultItem>()
-                        .Where(x => x.Name.StartsWith(searchString) || x.Surname.StartsWith(searchString));
+        //            var searchQuery = context.GetQueryable<PersonResultItem>()
+        //                .Where(x => x.Name.StartsWith(searchString) || x.Surname.StartsWith(searchString));
 
-                    return searchQuery.ToList().Select(i => new Person(i)).ToList();
-                }
-            }
+        //            return searchQuery.ToList().Select(i => new Person(i)).ToList();
+        //        }
+        //    }
 
         public async void IdentifyTag(Guid tagId, Guid personId)
         {
@@ -321,8 +316,7 @@ namespace SharedSource.FaceRecognition.Services
                         {
                             CropImage(face.FacePosition, mediaItem.GetMediaStream(), croppedImage);
 
-                            var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"),
-                                Settings.GetSetting("Cognitive.Url"));
+                            var faceServiceClient = CreateAzureClient();
 
                             croppedImage.Seek(0, SeekOrigin.Begin);
 
@@ -369,7 +363,7 @@ namespace SharedSource.FaceRecognition.Services
         {
             try
             {
-                var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"), Settings.GetSetting("Cognitive.Url"));
+                var faceServiceClient = CreateAzureClient();
 
                 var result = await faceServiceClient.CreatePersonAsync(personGroupId.ToLowerInvariant(), personName);
 
@@ -387,7 +381,7 @@ namespace SharedSource.FaceRecognition.Services
 
         public async void CreatePersonGroupIfNotExists(string personGroupId, string personGroupName)
         {
-            var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"), Settings.GetSetting("Cognitive.Url"));
+            var faceServiceClient = CreateAzureClient();
             PersonGroup personGroup = null;
 
             try
@@ -417,6 +411,45 @@ namespace SharedSource.FaceRecognition.Services
                 throw;
             }
 
+        }
+
+        public async void CreatePersonAndSaveToItem(Item item)
+        {
+            try
+            {
+                //Person template
+                if (item.TemplateID == ID.Parse("{1EB19995-B7D6-4AAC-ACF7-6411264DCE24}"))
+                {
+                    var parentGroup = item.Parent;
+
+                    if (string.IsNullOrEmpty(item["Id"]) && !string.IsNullOrEmpty(item["Title"]))
+                    {
+                        var person = await CreatePerson(parentGroup["GroupId"], item["Title"]);
+
+                        item.Editing.BeginEdit();
+                        item["Id"] = person.ToString();
+                        item.Editing.EndEdit(true, true);
+                    }
+                }
+
+                //Person group template
+                if (item.TemplateID == ID.Parse("{157A7C04-DC65-4B1B-BD43-A4071C2B8604}"))
+                {
+                    if (!string.IsNullOrEmpty(item["GroupName"]) && !string.IsNullOrEmpty("GroupId"))
+                    {
+                        CreatePersonGroupIfNotExists(item["GroupId"], item["GroupName"]);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Log.Info("Error during creating entity in Azure - " + ex, this);
+            }
+        }
+
+        public void RebuildPersonGroup()
+        {
+            throw new NotImplementedException();
         }
     }
 }

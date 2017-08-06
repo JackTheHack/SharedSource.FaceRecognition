@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using SharedSource.FaceRecognition.Models;
@@ -8,6 +9,8 @@ using Sitecore.Data;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Sitecore.Publishing;
+using Sitecore.Security.Accounts;
+using Sitecore.SecurityModel;
 
 namespace SharedSource.FaceRecognition.Pipelines
 {
@@ -18,7 +21,7 @@ namespace SharedSource.FaceRecognition.Pipelines
             Task.Run(() => RunProcess(args));
         }
 
-        private void RunProcess(DetectFacesArgs args)
+        private async void RunProcess(DetectFacesArgs args)
         {
             if (args.MediaItem == null)
             {
@@ -27,29 +30,38 @@ namespace SharedSource.FaceRecognition.Pipelines
 
             try
             {
-                Log.Info("Image recognition starting...", this);
+                
+                    Log.Info("Image recognition starting...", this);
 
-                IFaceDetection faceDetection = new AzureFaceDetection();
+                    IFaceDetection faceDetection = new AzureFaceDetection();
 
-                var mediaStream = args.Stream ?? args.MediaItem.GetMediaStream();
+                    var mediaStream = args.Stream ?? args.MediaItem.GetMediaStream();
 
-                if (mediaStream == null)
+                    if (mediaStream == null)
+                    {
+                        Log.Info("Weird....  media item media stream is empty...", this);
+                        return;
+                    }
+
+                    var memoryStream = new MemoryStream();
+
+                    await mediaStream.CopyToAsync(memoryStream);
+
+                    var result = await faceDetection.DetectFacesAsync(memoryStream);
+
+                using (new SecurityDisabler())
                 {
-                    Log.Info("Weird....  media item media stream is empty...", this);
-                    return;
+                    args.MediaItem.InnerItem.Editing.BeginEdit();
+                    args.MediaItem.InnerItem["FaceMetadata"] = JsonConvert.SerializeObject(result);
+                    args.MediaItem.InnerItem.Editing.EndEdit(true, false);
                 }
 
-                var result = faceDetection.DetectFaces(mediaStream);
-
-                args.MediaItem.InnerItem.Editing.BeginEdit();
-                args.MediaItem.InnerItem["FaceMetadata"] = JsonConvert.SerializeObject(result);
-                args.MediaItem.InnerItem.Editing.EndEdit(true, false);
+                PublishManager.PublishItem(args.MediaItem, new[] { Database.GetDatabase("web"), },
+                                new[] { Language.Current }, false, false);
 
                 var index = ContentSearchManager.GetIndex("face_master_index");
 
                 index.Refresh(new SitecoreIndexableItem(args.MediaItem), IndexingOptions.Default);
-
-                PublishManager.PublishItem(args.MediaItem, new[] { Database.GetDatabase("web"), }, new[] { Language.Current }, false, false);
 
                 index = ContentSearchManager.GetIndex("face_web_index");
 

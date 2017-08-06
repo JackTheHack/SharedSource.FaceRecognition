@@ -1,21 +1,15 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Web;
 using System.Web.Mvc;
 using SharedSource.FaceRecognition.Models;
 using SharedSource.FaceRecognition.Services;
 using Sitecore.Configuration;
-using Sitecore.ContentSearch;
 using Sitecore.Data;
-using Sitecore.Data.Events;
 using Sitecore.Data.Items;
 using Sitecore.Globalization;
-using Sitecore.IO;
 using Sitecore.Pipelines;
 using Sitecore.Publishing;
-using Sitecore.Resources.Media;
 using Sitecore.SecurityModel;
 
 namespace SharedSource.FaceRecognition.Controllers
@@ -79,7 +73,6 @@ namespace SharedSource.FaceRecognition.Controllers
                             // Set the database
                             options.Database = Sitecore.Configuration.Factory.GetDatabase("master");                            
 
-
                                 // Now create the file
                                 Sitecore.Resources.Media.MediaCreator creator =
                                     new Sitecore.Resources.Media.MediaCreator();
@@ -87,17 +80,14 @@ namespace SharedSource.FaceRecognition.Controllers
                                 MediaItem mediaItem = creator.CreateFromStream(tempStream,
                                     newFileName + Path.GetExtension(file.FileName), options);
 
-                                mediaItem.InnerItem.Editing.BeginEdit();
+                            PublishManager.PublishItem(mediaItem, new[] { Database.GetDatabase("web"), },
+                                new[] { Language.Current }, false, false);
+            
 
-                                mediaItem.InnerItem["Alt"] = "Alt value";
+                            CorePipeline.Run("detectFaces", new DetectFacesArgs(mediaItem.InnerItem));
 
-                                mediaItem.InnerItem.Editing.EndEdit(true, false);
 
-                                CorePipeline.Run("detectFaces", new DetectFacesArgs(mediaItem.InnerItem));
-
-                               
                         }
-
                     }
                 }
             }
@@ -106,11 +96,8 @@ namespace SharedSource.FaceRecognition.Controllers
                 isSavedSuccessfully = false;
             }
 
-
             if (isSavedSuccessfully)
             {
-
-
                 return Json(new { Message = fName });
             }
 

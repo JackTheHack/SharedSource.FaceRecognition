@@ -248,18 +248,20 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands\GetTrainStatus.cs" />
+    <Compile Include="Commands\RebuildPersonGroup.cs" />
+    <Compile Include="Commands\Train.cs" />
     <Compile Include="Constants\GlobalConstants.cs" />
     <Compile Include="Controllers\FaceApiController.cs" />
     <Compile Include="Controllers\FaceController.cs" />
     <Compile Include="Helpers\ItemHelper.cs" />
-    <Compile Include="Helpers\SitecoreExtensions.cs" />
     <Compile Include="Models\DetectFacesArgs.cs" />
     <Compile Include="Models\FaceMetadata.cs" />
     <Compile Include="Models\FaceSearchResultItem.cs" />
     <Compile Include="Models\Person.cs" />
     <Compile Include="Models\PersonResultItem.cs" />
+    <Compile Include="Models\TrainResult.cs" />
     <Compile Include="Pipelines\DetectFaces.cs" />
-    <Compile Include="Pipelines\IndexingStart.cs" />
     <Compile Include="Pipelines\InitializeRoutes.cs" />
     <Compile Include="Pipelines\ItemPersonSaved.cs" />
     <Compile Include="Search\IdentifiedIndexableField.cs" />

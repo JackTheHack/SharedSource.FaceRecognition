@@ -34,10 +34,7 @@ namespace SharedSource.FaceRecognition.Services
 
                 try
                 {
-                    using (
-                        var faceServiceClient = new FaceServiceClient(
-                            Settings.GetSetting("Cognitive.Key1"),
-                            Settings.GetSetting("Cognitive.Url")))
+                    using (var faceServiceClient = _faceService.CreateAzureClient())
                     {
                             var detectResult2 =
                                 await
