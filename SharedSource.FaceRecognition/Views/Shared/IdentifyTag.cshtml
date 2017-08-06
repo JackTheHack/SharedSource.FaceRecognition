@@ -6,15 +6,23 @@
 @{Layout = null;}
 
 <div class="tag-item-selector">
-    <input type="hidden" name="selectedTag" />
+    <input type="hidden" name="selectedTag"/>
+    <div class="suggested-persons-container" style="display: none">
+        <h3>Suggested persons:</h3>
+        <div class="suggested-persons">
 
-    @if (Model != null)
-    {
-        foreach (var person in Model)
-         {
-             <div class="tag-person" >
-                 <a href="#" data-value="@person.ID">@person.Name @person.Surname</a>
-             </div>
-         }
-    }
+        </div>
+    </div>
+    <div>
+        <h3>Identify person:</h3>
+        @if (Model != null)
+        {
+            foreach (var person in Model)
+            {
+                <div class="tag-person">
+                    <a href="#" data-value="@person.ID">@person.Name @person.Surname</a>
+                </div>
+            }
+        }
+    </div>
 </div>

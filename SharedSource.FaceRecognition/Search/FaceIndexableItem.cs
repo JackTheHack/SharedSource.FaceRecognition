@@ -1,11 +1,13 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using SharedSource.EngagementPlanViewer;
 using SharedSource.FaceRecognition.Models;
 using SharedSource.FaceRecognition.Services;
 using Sitecore.ContentSearch;
 using Sitecore.Data.Items;
+using static System.String;
 
 namespace SharedSource.FaceRecognition.Search
 {
@@ -13,15 +15,26 @@ namespace SharedSource.FaceRecognition.Search
     {
         public FaceIndexableItem(Item item) :  base(item)
         {
-            var faceRecognitionLogic = new FaceRecognitionLogic();
-            Task.Run(async () =>
+            var faceIdentification = new AzureFaceIdentification();
+
+                var mediaItem = new MediaItem(item);
+            var mediaStream = mediaItem.GetMediaStream();
+
+            if (mediaStream != null)
             {
-                Faces = await faceRecognitionLogic.DetectFaces(new MediaItem(item));
-                IdentifiedPersons = !string.IsNullOrEmpty(item["Description"])
-                    ? JsonConvert.DeserializeObject<IdentifiedPerson[]>(item["Description"])
+                Faces =
+                    !IsNullOrEmpty(item["FaceMetadata"])
+                        ? JsonConvert.DeserializeObject<FaceMetadata[]>(item["FaceMetadata"])
+                        : new FaceMetadata[0];
+                IdentifiedPersons = !IsNullOrEmpty(item["IdentifiedPersons"])
+                    ? JsonConvert.DeserializeObject<IdentifiedPerson[]>(item["IdentifiedPersons"])
                     : new IdentifiedPerson[0];
-            }).Wait(TimeSpan.FromSeconds(3));
+
+                Suggestions = faceIdentification.Identify(Faces.ToList(), mediaStream);
+            }
         }
+
+        public List<IdentifiedPerson> Suggestions { get; set; }
 
         public IdentifiedPerson[] IdentifiedPersons { get; set; }
 

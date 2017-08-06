@@ -262,8 +262,11 @@
     <Compile Include="Pipelines\IndexingStart.cs" />
     <Compile Include="Pipelines\InitializeRoutes.cs" />
     <Compile Include="Pipelines\ItemPersonSaved.cs" />
+    <Compile Include="Search\IdentifiedIndexableField.cs" />
     <Compile Include="Search\FaceTagIdIndexableField.cs" />
-    <Compile Include="Services\FaceRecognitionLogic.cs" />
+    <Compile Include="Services\AzureFaceDetection.cs" />
+    <Compile Include="Services\AzureFaceIdentification.cs" />
+    <Compile Include="Services\EmguCVFaceDetection.cs" />
     <Compile Include="Pipelines\GetTaggedImageValue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Search\BaseFaceIndexableField.cs" />
@@ -272,6 +275,8 @@
     <Compile Include="Search\FacePositionIndexableField.cs" />
     <Compile Include="Search\PersonsIndexableField.cs" />
     <Compile Include="Services\FaceService.cs" />
+    <Compile Include="Services\IFaceDetection.cs" />
+    <Compile Include="Services\IFaceIdentification.cs" />
     <Compile Include="sitecore\admin\FaceDetect.aspx.cs">
       <DependentUpon>FaceDetect.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
@@ -288,7 +293,9 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="App_Config\Include\SharedSource.FaceRecognition.config" />
+    <Content Include="App_Config\Include\z.SharedSource\SharedSource.FaceRecognition.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="App_Data\haarcascade_frontalface_default.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

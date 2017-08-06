@@ -4,13 +4,17 @@
 
 .face-tag {
     position: absolute;   
+    border-color: red;
+    border-style: solid;
+    border-width: 0px;
 }
 
-.face-tag .identified {
+/*.face-tag .identified {
     border-color: green !important;
-}
+}*/
 
 .tag-item-selector {
+    padding: 10px;
    display: block;
     width: 250px;
     height: 100%;
@@ -33,11 +37,46 @@
     background: black;
     margin: 10px;
     text-align: center;
-    padding: 10px;
 }
 
 .tag-item-selector .tag-person a:hover {
     background: darkblue;
+}
+
+
+
+.face-tag-container {
+    width: 100%;
+    position:relative; /*float:left; width:25%;*/
+}
+
+.tag-info {
+    padding: 3px;
+    position: absolute;
+    bottom: -30px;
+    background: white;
+    z-index: 101;
+    display: none;
+}
+
+.has-suggestions {
+    border-color: orange;
+}
+
+.identified {
+    border-color: green;
+}
+
+.face-tag:hover, .face-tag.selected {
+    border-color: blue;
+}
+
+.face-tag:hover .tag-info, .face-tag.identified .tag-info, .face-tag.has-suggestions .tag-info {
+    display: block;
+}
+
+.face-tag-container img {
+    width: 100%;
 }
 
 

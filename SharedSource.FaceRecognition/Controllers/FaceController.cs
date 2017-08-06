@@ -9,8 +9,10 @@ using SharedSource.FaceRecognition.Services;
 using Sitecore.Configuration;
 using Sitecore.ContentSearch;
 using Sitecore.Data;
+using Sitecore.Data.Events;
 using Sitecore.Data.Items;
 using Sitecore.Globalization;
+using Sitecore.IO;
 using Sitecore.Pipelines;
 using Sitecore.Publishing;
 using Sitecore.Resources.Media;
@@ -39,8 +41,6 @@ namespace SharedSource.FaceRecognition.Controllers
                     {
                         HttpPostedFileBase file = Request.Files[fileName];
                         //Save file content goes here
-
-
                         if (file != null && file.ContentLength > 0)
                         {
 
@@ -77,24 +77,25 @@ namespace SharedSource.FaceRecognition.Controllers
                             // set the path
                             options.Destination = imagesRoot.Paths.FullPath + "/" + newFileName;
                             // Set the database
-                            options.Database = Sitecore.Configuration.Factory.GetDatabase("master");
+                            options.Database = Sitecore.Configuration.Factory.GetDatabase("master");                            
 
-                            // Now create the file
-                            Sitecore.Resources.Media.MediaCreator creator = new Sitecore.Resources.Media.MediaCreator();
-                            MediaItem mediaItem = creator.CreateFromStream(tempStream,
-                                newFileName + Path.GetExtension(file.FileName), options);
 
-                            CorePipeline.Run("detectFaces", new DetectFacesArgs(mediaItem));
+                                // Now create the file
+                                Sitecore.Resources.Media.MediaCreator creator =
+                                    new Sitecore.Resources.Media.MediaCreator();
 
-                            PublishManager.PublishItem(mediaItem, new[] { Database.GetDatabase("web"), }, new[] { Language.Current }, false, false);
+                                MediaItem mediaItem = creator.CreateFromStream(tempStream,
+                                    newFileName + Path.GetExtension(file.FileName), options);
 
-                            var index = ContentSearchManager.GetIndex("face_master_index");
+                                mediaItem.InnerItem.Editing.BeginEdit();
 
-                            index.Refresh(new SitecoreIndexableItem(mediaItem), IndexingOptions.Default);
+                                mediaItem.InnerItem["Alt"] = "Alt value";
 
-                            index = ContentSearchManager.GetIndex("face_web_index");
+                                mediaItem.InnerItem.Editing.EndEdit(true, false);
 
-                            index.Refresh(new SitecoreIndexableItem(mediaItem), IndexingOptions.Default);
+                                CorePipeline.Run("detectFaces", new DetectFacesArgs(mediaItem.InnerItem));
+
+                               
                         }
 
                     }

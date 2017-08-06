@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using ImageResizer;
@@ -28,10 +29,14 @@ namespace SharedSource.FaceRecognition.Services
 {
     public class FaceService
     {
+        public StringBuilder StringLog { get; set; }
+
         private readonly Item _personsRoot;
 
         public FaceService()
         {
+            StringLog = new StringBuilder();
+
             var personsRootId = Settings.GetSetting("PersonsRoot");
 
             if (!string.IsNullOrEmpty(personsRootId))
@@ -40,16 +45,70 @@ namespace SharedSource.FaceRecognition.Services
             }
         }
 
-        public async void Train()
+        public class TrainResult
+        {
+            public string Status { get; set; }
+            public DateTime LastAction { get; set; }
+            public string Message { get; set; }
+            public bool IsTrained { get; set; }
+        }
+
+        public async Task<TrainResult> GetTrainingStatus()
+        {
+            using (
+                var faceServiceClient = new FaceServiceClient(
+                    Settings.GetSetting("Cognitive.Key1"),
+                    Settings.GetSetting("Cognitive.Url")))
+            {
+                var personRoot = GetPersonGroup();
+
+                var persons = await faceServiceClient.ListPersonsAsync(personRoot.PersonGroupId.ToLowerInvariant());
+
+                StringLog.AppendLine(personRoot.PersonGroupId);
+
+                foreach (var person in persons)
+                {
+                    StringLog.AppendLine($"Found person {person.PersonId} {person.Name}  {string.Join(",", person.PersistedFaceIds)}");
+
+                    Log.Info($"Found person {person.PersonId} {person.Name} {string.Join(",", person.PersistedFaceIds)}", this);
+                }
+
+                var trainingStatus =
+                            await
+                                faceServiceClient.GetPersonGroupTrainingStatusAsync(
+                                    personRoot.PersonGroupId.ToLowerInvariant());
+
+                if (trainingStatus != null)
+                {
+                    var result = new TrainResult();
+                    result.Status = trainingStatus.Status.ToString();
+                    result.Message = trainingStatus.Message;
+                    result.LastAction = trainingStatus.LastActionDateTime;
+                    result.IsTrained = true;
+
+                    Log.Info(
+                        $"Training status - {trainingStatus.Message} {trainingStatus.Status} {trainingStatus.LastActionDateTime} {trainingStatus.CreatedDateTime}",
+                        this);
+
+                    return result;
+                }
+            }
+
+            return null;
+        }
+
+        public async Task<TrainResult> Train(bool forceTraining = false)
         {
             try
             {
+                var result = new TrainResult();
+
                 var personRoot = GetPersonGroup();
 
                 using (
                     var faceServiceClient = new FaceServiceClient(
                         Settings.GetSetting("Cognitive.Key1"),
-                        "https://eastus2.api.cognitive.microsoft.com/face/v1.0"))
+                        Settings.GetSetting("Cognitive.Url")))
                 {
                     bool isTrained = false;
 
@@ -64,6 +123,11 @@ namespace SharedSource.FaceRecognition.Services
 
                         if (trainingStatus != null)
                         {
+                            result.Status = trainingStatus.Status.ToString();
+                            result.Message = trainingStatus.Message;
+                            result.LastAction = trainingStatus.LastActionDateTime;
+                            result.IsTrained = true;
+
                             Log.Info(
                                 $"Training status - {trainingStatus.Message} {trainingStatus.Status} {trainingStatus.LastActionDateTime} {trainingStatus.CreatedDateTime}",
                                 this);
@@ -73,39 +137,49 @@ namespace SharedSource.FaceRecognition.Services
                     catch (FaceAPIException ex)
                     {
                         Log.Info("Person group was not trained at all..", this);
+                        result.Message = ex.ErrorMessage;
+                        result.IsTrained = false;
                         isTrained = false;
                     }
 
                     var persons = await faceServiceClient.ListPersonsAsync(personRoot.PersonGroupId.ToLowerInvariant());
 
+                    StringLog.AppendLine(personRoot.PersonGroupId);
+
                     foreach (var person in persons)
                     {
-                        Log.Info($"Found person {person.PersonId} {person.Name}", this);
+                        StringLog.AppendLine($"Found person {person.PersonId} {person.Name}  {string.Join(",", person.PersistedFaceIds)}");
+
+                        Log.Info($"Found person {person.PersonId} {person.Name} {string.Join(",", person.PersistedFaceIds)}", this);
                     }
 
                         if (trainingStatus != null && trainingStatus.Status == Status.Succeeded)
                         {
                             isTrained = true;
+                            StringLog.AppendLine("Person group is successfully trained already.");
                             Log.Info("Person group is successfully trained already.", this);
                         }
 
-
-                    if(!isTrained)
+                    if (!isTrained || forceTraining)
                     {
+                        StringLog.AppendLine("Started person group training.");
                         await faceServiceClient.TrainPersonGroupAsync(personRoot.PersonGroupId.ToLowerInvariant());
                     }
 
-
+                    return result;
                 }
             }
             catch (FaceAPIException e)
             {
                 Log.Info("FaceApi exception -"+ e.ErrorMessage, this);
+                
             }
             catch (Exception e)
             {
                 Log.Info("Exception during training - " + e.ToString(), this);
-            }
+            }   
+
+            return null;
         }
 
         public List<MediaItem> GetImages()
@@ -190,6 +264,8 @@ namespace SharedSource.FaceRecognition.Services
 
                     SetIdentifiedPersonInfo(tagId, imageItem, personItem);
 
+                    imageItem = Database.GetDatabase("master").GetItem(imageItem.ID);
+
                     PublishManager.PublishItem(imageItem, new[] { Database.GetDatabase("web"), }, new[] { imageItem.Language }, false, false);
 
                     index.Refresh(new SitecoreIndexableItem(imageItem), IndexingOptions.Default);
@@ -208,8 +284,9 @@ namespace SharedSource.FaceRecognition.Services
                 return;
             }
 
-            var value = (!string.IsNullOrEmpty(imageItem["Description"])
-                ? JsonConvert.DeserializeObject<IdentifiedPerson[]>(imageItem["Description"])
+            
+            var value = (!string.IsNullOrEmpty(imageItem["IdentifiedPersons"])
+                ? JsonConvert.DeserializeObject<IdentifiedPerson[]>(imageItem["IdentifiedPersons"])
                 : new IdentifiedPerson[0]).ToList();
 
             if (!value.Any(i => i.Id == tagId && i.Data != null && i.Data.ID == personItem.ID))
@@ -225,8 +302,8 @@ namespace SharedSource.FaceRecognition.Services
             using (new SecurityDisabler())
             {
                 imageItem.Editing.BeginEdit();
-                imageItem.Fields["Description"].SetValue(JsonConvert.SerializeObject(value), true);
-                imageItem.Editing.EndEdit(false, true);
+                imageItem.Fields["IdentifiedPersons"].SetValue(JsonConvert.SerializeObject(value), true);
+                imageItem.Editing.EndEdit(false);
             }            
         }
 
@@ -245,13 +322,16 @@ namespace SharedSource.FaceRecognition.Services
                             CropImage(face.FacePosition, mediaItem.GetMediaStream(), croppedImage);
 
                             var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"),
-                                "https://eastus2.api.cognitive.microsoft.com/face/v1.0");
+                                Settings.GetSetting("Cognitive.Url"));
 
                             croppedImage.Seek(0, SeekOrigin.Begin);
 
-                            Log.Info(
-                                $"Adding person face to person {personItem.AzurePersonGroupId} {personItem.AzureId}",
-                                this);
+                            Image img = Image.FromStream(croppedImage);
+                            img.Save(HttpContext.Current.Server.MapPath("~/face.jpg"));
+
+                            croppedImage.Seek(0, SeekOrigin.Begin);
+
+                            Log.Info($"Adding person face to person {personItem.AzurePersonGroupId} {personItem.AzureId}", this);                            
 
                             await faceServiceClient.AddPersonFaceAsync(personItem.AzurePersonGroupId.ToLowerInvariant(),
                                 Guid.Parse(personItem.AzureId), croppedImage);
@@ -264,7 +344,7 @@ namespace SharedSource.FaceRecognition.Services
                         }
                         catch (Exception e)
                         {
-                            Log.Info("Error during resize "+e.ToString(), this);
+                            Log.Info("Error during resize "+e, this);
                         }
                     }
                 }
@@ -289,7 +369,7 @@ namespace SharedSource.FaceRecognition.Services
         {
             try
             {
-                var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"), "https://eastus2.api.cognitive.microsoft.com/face/v1.0");
+                var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"), Settings.GetSetting("Cognitive.Url"));
 
                 var result = await faceServiceClient.CreatePersonAsync(personGroupId.ToLowerInvariant(), personName);
 
@@ -307,7 +387,7 @@ namespace SharedSource.FaceRecognition.Services
 
         public async void CreatePersonGroupIfNotExists(string personGroupId, string personGroupName)
         {
-            var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"), "https://eastus2.api.cognitive.microsoft.com/face/v1.0");
+            var faceServiceClient = new FaceServiceClient(Settings.GetSetting("Cognitive.Key1"), Settings.GetSetting("Cognitive.Url"));
             PersonGroup personGroup = null;
 
             try

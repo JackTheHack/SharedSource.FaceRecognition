@@ -9,7 +9,19 @@
 <body>
     <form id="form1" runat="server">
     <div>
-        <asp:Button runat="server" id="btnDetectFaces" OnClick="btnDetectFaces_OnClick" text="Detect Faces"/>
+        <div>
+        <asp:Button runat="server" id="btnDetectFaces" OnClick="btnDetectFaces_OnClick" text="Train Dataset"/>
+            </div>
+        <div>
+        <asp:Button runat="server" text="Training Status" OnClick="btnTrainingStatus_OnClick" id="btnTrainingStatus"/>        
+            <asp:CheckBox runat="server" Text="Force" Checked="False" id="chkForce"/>
+            </div>
+        <div>
+        <asp:Label runat="server" id="lblResult"></asp:Label>
+            </div>
+        <div>
+            <asp:TextBox TextMode="MultiLine" style="width:100%" runat="server" ID="txtLog"></asp:TextBox>
+            </div>
     </div>
     </form>
 </body>

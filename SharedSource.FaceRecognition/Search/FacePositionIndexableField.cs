@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Sitecore.ContentSearch.ComputedFields;
+using Sitecore.Diagnostics;
 
 namespace SharedSource.FaceRecognition.Search
 {
@@ -7,7 +8,9 @@ namespace SharedSource.FaceRecognition.Search
     {
         protected override object GetFieldValue(FaceIndexableItem cognitiveIndexable)
         {
-            return JsonConvert.SerializeObject(cognitiveIndexable.Faces);
+            var result = JsonConvert.SerializeObject(cognitiveIndexable.Faces);
+            Log.Info("FacePositionIndexableField " + result, this);
+            return result;
         }        
     }
 }

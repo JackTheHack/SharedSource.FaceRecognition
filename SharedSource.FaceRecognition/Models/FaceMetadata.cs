@@ -7,8 +7,8 @@ namespace SharedSource.FaceRecognition.Models
     {
         public Guid UniqueId { get; set; }
         public Rectangle FacePosition { get; set; }
-        public IdentifiedPerson[] Suggestions { get; set; }
-        public IdentifiedPerson[] IdentifiedPersons { get; set; }
+        //public IdentifiedPerson[] Suggestions { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 
     public class IdentifiedPerson
@@ -16,5 +16,6 @@ namespace SharedSource.FaceRecognition.Models
         public Guid Id { get; set; }
         public double Confidence { get; set; }
         public Person Data { get; set; }
+        public Guid FaceId { get; set; }
     }
 }

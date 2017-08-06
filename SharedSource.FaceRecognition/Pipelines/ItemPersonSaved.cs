@@ -56,16 +56,6 @@ namespace SharedSource.FaceRecognition.Pipelines
                             faceService.CreatePersonGroupIfNotExists(item["GroupId"], item["GroupName"]);
                         }
                     }
-
-                    //MediaItem
-                    if (item.Axes.GetAncestors().Any(i => i.TemplateID == GlobalConstants.FaceMediaFolderTemplateId))
-                    {
-                        CorePipeline.Run("detectFaces", new DetectFacesArgs(item));
-
-                        //var indexableItem = new SitecoreIndexableItem(item);
-
-                        //ContentSearchManager.GetIndex(indexableItem).Refresh(indexableItem);
-                    }
                 }
                 catch (Exception ex)
                 {

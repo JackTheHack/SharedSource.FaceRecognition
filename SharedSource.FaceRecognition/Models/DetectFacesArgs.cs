@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Web;
 using Sitecore.Data.Items;
@@ -20,5 +21,6 @@ namespace SharedSource.FaceRecognition.Models
         }
 
         public MediaItem MediaItem { get; set; }
+        public Stream Stream { get; set; }
     }
 }

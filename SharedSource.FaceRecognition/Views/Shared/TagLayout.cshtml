@@ -29,6 +29,7 @@
     <link rel="stylesheet" href="/Styles/facerecognition.css"/>
     <link rel="stylesheet" href="/Styles/notiny.min.css"/>
     <link rel="stylesheet" href="/Styles/nanogallery/nanogallery2.min.css"/>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://rawgit.com/enyo/dropzone/master/dist/dropzone.css">
 </head>
 <body>
@@ -41,15 +42,21 @@
     </form>
 </div>
 
-<div class="images-section" id="nanogallery2">
-@foreach (var image in images)
-{
-    @*<a href="@MediaManager.GetMediaUrl(image)" data-ngThumb="@MediaManager.GetMediaUrl(image, new MediaUrlOptions(150, 0, true))" data-facetags="@ItemHelper.GetImageChromeData()"></a>*@
-
-    <img src="@MediaManager.GetMediaUrl(image)"
-         data-facetags="@Html.Raw(ItemHelper.GetImageChromeData(image))" 
-         showfacetags="True">
-}
+<div class="images-section container" id="container">
+    <div class="row">
+        @{ var index = 0;}
+        @foreach (var image in images)
+        {
+            <div class="col-md-6 col-xs-12">
+                @Html.RenderFaceImage(image)
+            </div>
+            if(index%2 == 1)
+            {
+                 <div class="clearfix" style="margin-bottom: 10px;"></div>
+            }
+            index++;
+        }
+    </div>
 </div>
 @Html.Action("IdentifyTag", "Face")
 </body>

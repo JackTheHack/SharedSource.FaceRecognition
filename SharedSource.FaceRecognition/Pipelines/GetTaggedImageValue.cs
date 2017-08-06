@@ -25,15 +25,19 @@ namespace SharedSource.FaceRecognition.Pipelines
                     Parameters.Remove("data-facetags");
                 }
 
+                if (Parameters.ContainsKey("data-imgsize"))
+                {
+                    Parameters.Remove("data-imgsize");
+                }
+
                 if (!string.IsNullOrEmpty(chromeData))
                 {
                     Parameters.Add("data-facetags", chromeData);
+                    Parameters.Add("data-imgsize", ItemHelper.GetImageFieldSizeChromeData(Item, FieldName));
                 }
             }
 
             return base.Render();
         }
-    }
-
-    
+    }    
 }
