@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharedSource.FaceRecognitio
 EndProject
 Project("{CAA73BB0-EF22-4D79-A57E-DF67B3BA9C80}") = "SharedSource.TDS.FaceRecognition", "SharedSource.TDS.FaceRecognition\SharedSource.TDS.FaceRecognition.scproj", "{F6FA06D1-8CD3-4924-BEC1-43064FD008F7}"
 EndProject
+Project("{CAA73BB0-EF22-4D79-A57E-DF67B3BA9C80}") = "SharedSource.TDS.FaceRecognition.Core", "SharedSource.TDS.FaceRecognition.Core\SharedSource.TDS.FaceRecognition.Core.scproj", "{A3D80D83-04B6-4A79-9AF2-3764A539E169}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +25,12 @@ Global
 		{F6FA06D1-8CD3-4924-BEC1-43064FD008F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F6FA06D1-8CD3-4924-BEC1-43064FD008F7}.Release|Any CPU.Build.0 = Release|Any CPU
 		{F6FA06D1-8CD3-4924-BEC1-43064FD008F7}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{A3D80D83-04B6-4A79-9AF2-3764A539E169}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3D80D83-04B6-4A79-9AF2-3764A539E169}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3D80D83-04B6-4A79-9AF2-3764A539E169}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{A3D80D83-04B6-4A79-9AF2-3764A539E169}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3D80D83-04B6-4A79-9AF2-3764A539E169}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3D80D83-04B6-4A79-9AF2-3764A539E169}.Release|Any CPU.Deploy.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

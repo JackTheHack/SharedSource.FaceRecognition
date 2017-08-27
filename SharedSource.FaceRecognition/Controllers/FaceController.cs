@@ -18,7 +18,7 @@ namespace SharedSource.FaceRecognition.Controllers
     {
         public ActionResult IdentifyTag()
         {
-            var service = new FaceService();
+            IFaceService service = new FaceService();
             return View("~/Views/Shared/IdentifyTag.cshtml", service.GetAllPersons());
         }
         

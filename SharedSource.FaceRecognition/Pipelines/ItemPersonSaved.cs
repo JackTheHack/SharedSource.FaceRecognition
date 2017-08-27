@@ -22,8 +22,8 @@ namespace SharedSource.FaceRecognition.Pipelines
 
         private void CreatePersonDefinition(Item item)
         {
-            var faceService = new FaceService();
-            faceService.CreatePersonAndSaveToItem(item);
+            IFaceService faceService = new FaceService();
+            faceService.CreatePersonByItemAsync(item);
         }
     }
 }

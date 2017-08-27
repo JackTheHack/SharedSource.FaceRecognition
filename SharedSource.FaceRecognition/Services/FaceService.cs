@@ -13,36 +13,43 @@ using Newtonsoft.Json;
 using SharedSource.FaceRecognition.Models;
 using Sitecore.Configuration;
 using Sitecore.ContentSearch;
+using Sitecore.ContentSearch.Utilities;
 using Sitecore.Data;
 using Sitecore.Data.Fields;
 using Sitecore.Data.Items;
 using Sitecore.Diagnostics;
-using Sitecore.Globalization;
 using Sitecore.Publishing;
-using Sitecore.Resources.Media;
-using Sitecore.Search;
 using Sitecore.SecurityModel;
 using FaceMetadata = SharedSource.FaceRecognition.Models.FaceMetadata;
 using Person = SharedSource.FaceRecognition.Models.Person;
 
 namespace SharedSource.FaceRecognition.Services
 {
-    public class FaceService
+    public class FaceService : IFaceService
     {
-        public StringBuilder StringLog { get; private set; }
+        private StringBuilder StringLog { get; }
 
         private readonly Item _personsRoot;
+        private readonly Item _mediaRoot;
 
         public FaceService()
         {
             StringLog = new StringBuilder();
 
-            var personsRootId = Settings.GetSetting("PersonsRoot");
+            var settings = Sitecore.Context.Database.GetItem("{1B29F0D5-F935-4E0D-AC4A-07D6A3E0D4A1}");
+            var personsRootId =  settings["PersonGroup"];
+            var mediaRootId = settings["MediaFolder"];
 
-            if (!string.IsNullOrEmpty(personsRootId))
+            if (!string.IsNullOrEmpty(personsRootId) && !string.IsNullOrEmpty(mediaRootId))
             {
                 _personsRoot = Database.GetDatabase("web").GetItem(ID.Parse(personsRootId));
+                _mediaRoot = Database.GetDatabase("web").GetItem(ID.Parse(mediaRootId));
             }
+        }
+
+        public FaceService(StringBuilder log) : this()
+        {
+            StringLog = log;
         }
 
         public FaceServiceClient CreateAzureClient()
@@ -52,22 +59,11 @@ namespace SharedSource.FaceRecognition.Services
                 Settings.GetSetting("Cognitive.Url"));
         }
 
-        public async Task<TrainResult> GetTrainingStatus()
+        public async Task<ExtendedTrainResult> GetTrainingStatusAsync()
         {
             using (var faceServiceClient = CreateAzureClient())
             {
-                var personRoot = GetPersonGroup();
-
-                var persons = await faceServiceClient.ListPersonsAsync(personRoot.PersonGroupId.ToLowerInvariant());
-
-                StringLog.AppendLine(personRoot.PersonGroupId);
-
-                foreach (var person in persons)
-                {
-                    StringLog.AppendLine($"Found person {person.PersonId} {person.Name}  {string.Join(",", person.PersistedFaceIds)}");
-
-                    Log.Info($"Found person {person.PersonId} {person.Name} {string.Join(",", person.PersistedFaceIds)}", this);
-                }
+                var personRoot = GetPersonGroup();                
 
                 var trainingStatus =
                             await
@@ -76,13 +72,42 @@ namespace SharedSource.FaceRecognition.Services
 
                 if (trainingStatus != null)
                 {
-                    var result = new TrainResult
+                    var result = new ExtendedTrainResult()
                     {
                         Status = trainingStatus.Status.ToString(),
                         Message = trainingStatus.Message,
                         LastAction = trainingStatus.LastActionDateTime,
-                        IsTrained = true
+                        IsTrained = true                        
                     };
+
+
+                    try
+                    {
+                        var persons =
+                            await faceServiceClient.ListPersonsAsync(personRoot.PersonGroupId.ToLowerInvariant());
+                        result.Persons = persons?.Select(i => new PersonData() { FaceCount = i.PersistedFaceIds.Length, Name = i.Name, Id = i.PersonId }).ToList();
+                    }
+                    catch (Exception e)
+                    {
+                        Log.Warn(e.ToString(), e, this);
+                    }
+
+                    try
+                    {
+                        var personGroup = await faceServiceClient.GetPersonGroupAsync(personRoot.PersonGroupId.ToLowerInvariant());
+
+                        result.PersonGroup =
+                                personGroup != null
+                                    ? new PersonGroupData() {Id = personGroup.PersonGroupId, Name = personGroup.Name}
+                                    : null;
+                    }
+                    catch (FaceAPIException e)
+                    {
+                        Log.Warn(e.ToString(), e, this);
+                    }
+
+
+
 
                     Log.Info(
                         $"Training status - {trainingStatus.Message} {trainingStatus.Status} {trainingStatus.LastActionDateTime} {trainingStatus.CreatedDateTime}",
@@ -95,11 +120,14 @@ namespace SharedSource.FaceRecognition.Services
             return null;
         }
 
-        public async Task<TrainResult> Train(bool forceTraining = false)
+        public async Task<TrainResult> TrainAsync(bool forceTraining = false)
         {
             try
             {
-                var result = new TrainResult();
+                var result = new TrainResult()
+                {
+                    Message = "No information"
+                };
 
                 var personRoot = GetPersonGroup();
 
@@ -134,31 +162,18 @@ namespace SharedSource.FaceRecognition.Services
                         Log.Info("Person group was not trained at all..", this);
                         result.Message = ex.ErrorMessage;
                         result.IsTrained = false;
-                        isTrained = false;
                     }
 
-                    var persons = await faceServiceClient.ListPersonsAsync(personRoot.PersonGroupId.ToLowerInvariant());
-
-                    StringLog.AppendLine(personRoot.PersonGroupId);
-
-                    foreach (var person in persons)
-                    {
-                        StringLog.AppendLine($"Found person {person.PersonId} {person.Name}  {string.Join(",", person.PersistedFaceIds)}");
-
-                        Log.Info($"Found person {person.PersonId} {person.Name} {string.Join(",", person.PersistedFaceIds)}", this);
-                    }
-
-                        if (trainingStatus != null && trainingStatus.Status == Status.Succeeded)
-                        {
+                    if (trainingStatus != null && trainingStatus.Status == Status.Succeeded)
+                   {
                             isTrained = true;
-                            StringLog.AppendLine("Person group is successfully trained already.");
-                            Log.Info("Person group is successfully trained already.", this);
-                        }
+                            result.Message = "Person group is successfully trained already";
+                   }
 
-                    if (!isTrained || forceTraining)
-                    {
-                        StringLog.AppendLine("Started person group training.");
+                   if (!isTrained || forceTraining)
+                   {
                         await faceServiceClient.TrainPersonGroupAsync(personRoot.PersonGroupId.ToLowerInvariant());
+                        result.Message = "Started person group training";
                     }
 
                     return result;
@@ -171,7 +186,7 @@ namespace SharedSource.FaceRecognition.Services
             }
             catch (Exception e)
             {
-                Log.Info("Exception during training - " + e.ToString(), this);
+                Log.Info("Exception during training - " + e, this);
             }   
 
             return null;
@@ -179,8 +194,7 @@ namespace SharedSource.FaceRecognition.Services
 
         public List<MediaItem> GetImages()
         {
-            var root = Sitecore.Context.Database.GetItem(ID.Parse(Settings.GetSetting("ImagesRoot")));
-            return root.Children.Select(i => new MediaItem(i)).ToList();
+            return _mediaRoot != null ? _mediaRoot.Children.Select(i => new MediaItem(i)).ToList() : new List<MediaItem>();
         }
 
         public List<Person> GetAllPersons()
@@ -197,23 +211,7 @@ namespace SharedSource.FaceRecognition.Services
             };
         }
 
-        //public List<Person> SearchPersons(string searchString)
-        //{
-        //    var indexName = Sitecore.Context.Database.Name == "master" ? "sitecore_master_index" : "sitecore_web_index";
-
-        //    var index = ContentSearchManager.GetIndex(indexName);
-
-        //    using (var context = index.CreateSearchContext())
-        //    {
-
-        //            var searchQuery = context.GetQueryable<PersonResultItem>()
-        //                .Where(x => x.Name.StartsWith(searchString) || x.Surname.StartsWith(searchString));
-
-        //            return searchQuery.ToList().Select(i => new Person(i)).ToList();
-        //        }
-        //    }
-
-        public async void IdentifyTag(Guid tagId, Guid personId)
+        public async void IdentifyTagAsync(Guid tagId, Guid personId)
         {
             var indexName = Sitecore.Context.Database.Name == "master" ? "face_master_index" : "face_web_index";
 
@@ -345,7 +343,7 @@ namespace SharedSource.FaceRecognition.Services
             }
         }
 
-        public void CropImage(Rectangle cp, Stream source, MemoryStream croppedImage)
+        private void CropImage(Rectangle cp, Stream source, MemoryStream croppedImage)
         {
             var imageResizer = new ImageResizer.Configuration.Config();
             string cropFormat = $"?crop={cp.Left},{cp.Top},{cp.Right},{cp.Bottom}";
@@ -359,18 +357,28 @@ namespace SharedSource.FaceRecognition.Services
             return GetAllPersons().FirstOrDefault(i => i.ID == ID.Parse(personId));
         }
 
-        public async Task<Guid> CreatePerson(string personGroupId, string personName)
+        private async Task<Guid> CreateOrUpdatePerson(string personGroupId, Guid personId, string personName)
         {
             try
             {
                 var faceServiceClient = CreateAzureClient();
 
-                var result = await faceServiceClient.CreatePersonAsync(personGroupId.ToLowerInvariant(), personName);
+                var person = personId != Guid.Empty
+                    ? await faceServiceClient.GetPersonAsync(personGroupId.ToLowerInvariant(), personId)
+                    : null;                
 
-                Log.Info($"Created person - {personGroupId} {personName} {result.PersonId}", this);
+                if (person == null)
+                {
+                    var result = await faceServiceClient.CreatePersonAsync(personGroupId.ToLowerInvariant(), personName);
+                    Log.Info($"Created person - {personGroupId} {personName} {result.PersonId}", this);
+                    return result.PersonId;
+                }
 
+                await
+                    faceServiceClient.UpdatePersonAsync(personGroupId.ToLowerInvariant(), personId, personName,
+                        person.UserData);
 
-                return result.PersonId;
+                return personId;
             }
             catch (FaceAPIException e)
             {
@@ -379,7 +387,7 @@ namespace SharedSource.FaceRecognition.Services
             }
         }
 
-        public async void CreatePersonGroupIfNotExists(string personGroupId, string personGroupName)
+        private async void CreatePersonGroupIfNotExists(string personGroupId, string personGroupName)
         {
             var faceServiceClient = CreateAzureClient();
             PersonGroup personGroup = null;
@@ -413,7 +421,7 @@ namespace SharedSource.FaceRecognition.Services
 
         }
 
-        public async void CreatePersonAndSaveToItem(Item item)
+        public async void CreatePersonByItemAsync(Item item)
         {
             try
             {
@@ -422,13 +430,23 @@ namespace SharedSource.FaceRecognition.Services
                 {
                     var parentGroup = item.Parent;
 
-                    if (string.IsNullOrEmpty(item["Id"]) && !string.IsNullOrEmpty(item["Title"]))
+                    if (!string.IsNullOrEmpty(item["Title"]))
                     {
-                        var person = await CreatePerson(parentGroup["GroupId"], item["Title"]);
+                        Guid personId;
 
-                        item.Editing.BeginEdit();
-                        item["Id"] = person.ToString();
-                        item.Editing.EndEdit(true, true);
+                        if (!Guid.TryParse(item["Id"], out personId))
+                        {
+                            personId = Guid.Empty;
+                        }
+
+                        var person = await CreateOrUpdatePerson(parentGroup["GroupId"], personId, item["Title"]);
+
+                        if(personId == Guid.Empty)
+                        {
+                            item.Editing.BeginEdit();
+                            item.Fields["Id"].SetValue(person.ToString(), true);
+                            item.Editing.EndEdit(true, false);
+                        }
                     }
                 }
 
@@ -447,9 +465,29 @@ namespace SharedSource.FaceRecognition.Services
             }
         }
 
-        public void RebuildPersonGroup()
+        public async Task<bool> RebuildPersonGroup()
         {
-            throw new NotImplementedException();
+            try
+            {
+
+                if (_personsRoot != null && !string.IsNullOrEmpty(_personsRoot["GroupName"]))
+                {
+                    var faceServiceClient = CreateAzureClient();
+                    await faceServiceClient.DeletePersonGroupAsync(_personsRoot["GroupId"]);
+
+                    CreatePersonGroupIfNotExists(_personsRoot["GroupId"], _personsRoot["GroupName"]);
+
+                    _personsRoot.Children.ForEach(CreatePersonByItemAsync);
+                }
+
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                Log.Info("Error during rebuilding Azure entities - " + ex, this);
+                return false;
+            }
         }
     }
 }

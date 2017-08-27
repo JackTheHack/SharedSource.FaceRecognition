@@ -14,7 +14,7 @@ namespace SharedSource.FaceRecognition.Services
 {
     public class AzureFaceIdentification : IFaceIdentification
     {
-        private readonly FaceService _faceService;
+        private readonly IFaceService _faceService;
 
         public AzureFaceIdentification()
         {

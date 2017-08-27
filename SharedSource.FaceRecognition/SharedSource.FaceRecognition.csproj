@@ -279,20 +279,7 @@
     <Compile Include="Services\FaceService.cs" />
     <Compile Include="Services\IFaceDetection.cs" />
     <Compile Include="Services\IFaceIdentification.cs" />
-    <Compile Include="sitecore\admin\FaceDetect.aspx.cs">
-      <DependentUpon>FaceDetect.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="sitecore\admin\FaceDetect.aspx.designer.cs">
-      <DependentUpon>FaceDetect.aspx</DependentUpon>
-    </Compile>
-    <Compile Include="sitecore\shell\applications\SharedSource.EngagementPlanViewer\default.aspx.cs">
-      <DependentUpon>default.aspx</DependentUpon>
-      <SubType>ASPXCodeBehind</SubType>
-    </Compile>
-    <Compile Include="sitecore\shell\applications\SharedSource.EngagementPlanViewer\default.aspx.designer.cs">
-      <DependentUpon>default.aspx</DependentUpon>
-    </Compile>
+    <Compile Include="Services\IFaceService.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="App_Config\Include\z.SharedSource\SharedSource.FaceRecognition.config">
@@ -315,8 +302,6 @@
     <Content Include="Scripts\jquery.nanogallery2.min.js" />
     <Content Include="Scripts\jsplumb.js" />
     <Content Include="Scripts\notiny.min.js" />
-    <Content Include="sitecore\admin\FaceDetect.aspx" />
-    <Content Include="sitecore\shell\applications\SharedSource.EngagementPlanViewer\default.aspx" />
     <Content Include="packages.config" />
   </ItemGroup>
   <ItemGroup>

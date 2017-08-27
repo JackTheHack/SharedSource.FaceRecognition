@@ -13,7 +13,7 @@
 <!DOCTYPE html>
 
 @{
-    var faceService = new FaceService();
+    IFaceService faceService = new FaceService();
     var images = faceService.GetImages();
 }
 

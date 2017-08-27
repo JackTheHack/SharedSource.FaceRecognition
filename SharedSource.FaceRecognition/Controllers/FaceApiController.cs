@@ -15,8 +15,8 @@ namespace SharedSource.FaceRecognition.Controllers
         [System.Web.Mvc.AcceptVerbs("GET")]
         public string IdentifyTag(Guid tagId, Guid personId)
         {
-            var faceService = new FaceService();
-            faceService.IdentifyTag(tagId, personId);
+            IFaceService faceService = new FaceService();
+            faceService.IdentifyTagAsync(tagId, personId);
 
             return "OK";
         }
