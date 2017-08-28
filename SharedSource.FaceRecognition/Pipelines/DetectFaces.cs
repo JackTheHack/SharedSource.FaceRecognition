@@ -9,7 +9,6 @@ using Sitecore.Data;
 using Sitecore.Diagnostics;
 using Sitecore.Globalization;
 using Sitecore.Publishing;
-using Sitecore.Security.Accounts;
 using Sitecore.SecurityModel;
 
 namespace SharedSource.FaceRecognition.Pipelines

@@ -61,7 +61,9 @@ namespace SharedSource.FaceRecognition.Helpers
 
             var imgSize = $"{image.InnerItem["Width"]},{image.InnerItem["Height"]}";
 
-            return new HtmlString($"<img src='{imageUrl}' data-suggestions='{suggestions}' data-identified='{identifiedPersons}' data-facetags='{faceData}' data-imgsize='{imgSize}' showfacetags='True'/>");
+            return new HtmlString($"<img src='{imageUrl}' data-suggestions='{suggestions}'" +
+                                  $" data-identified='{identifiedPersons}' data-facetags='{faceData}' " +
+                                  $"data-imgsize='{imgSize}' showfacetags='True'/>");
         }
 
         public static FaceSearchResultItem FindFace(MediaItem item)

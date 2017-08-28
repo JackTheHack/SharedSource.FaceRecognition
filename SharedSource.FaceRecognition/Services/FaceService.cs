@@ -10,6 +10,7 @@ using ImageResizer;
 using Microsoft.ProjectOxford.Face;
 using Microsoft.ProjectOxford.Face.Contract;
 using Newtonsoft.Json;
+using SharedSource.FaceRecognition.Constants;
 using SharedSource.FaceRecognition.Models;
 using Sitecore.Configuration;
 using Sitecore.ContentSearch;
@@ -36,7 +37,7 @@ namespace SharedSource.FaceRecognition.Services
         {
             StringLog = new StringBuilder();
 
-            var settings = Sitecore.Context.Database.GetItem("{1B29F0D5-F935-4E0D-AC4A-07D6A3E0D4A1}");
+            var settings = Sitecore.Context.Database.GetItem(GlobalConstants.SettingsItemId);
             var personsRootId =  settings["PersonGroup"];
             var mediaRootId = settings["MediaFolder"];
 
